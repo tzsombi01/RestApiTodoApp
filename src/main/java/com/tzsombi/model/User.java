@@ -3,6 +3,7 @@ package com.tzsombi.model;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
+import java.util.List;
 
 @Entity(name = "ta_users")
 @Table(name = "ta_users")
@@ -17,8 +18,8 @@ public class User implements Serializable {
             strategy = GenerationType.SEQUENCE,
             generator = "ta_users_sequence"
     )
-    @Column(name = "user_id", updatable = false)
-    private Integer userId;
+    @Column(name = "user_id", nullable = false, updatable = false)
+    private Long userId;
     @Column(nullable = false)
     private String name;
     @Column(nullable = false)
@@ -29,6 +30,13 @@ public class User implements Serializable {
     private boolean isAdmin;
     @Column(nullable = false, columnDefinition = "TEXT")
     private String password;
+    @OneToMany(
+            targetEntity = Todo.class,
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @JoinColumn(name = "user_id", referencedColumnName = "user_id")
+    private List<Todo> todos;
 
     public User() {}
 
@@ -40,11 +48,11 @@ public class User implements Serializable {
         this.password = password;
     }
 
-    public Integer getUserId() {
+    public Long getUserId() {
         return userId;
     }
 
-    public void setUserId(Integer userId) {
+    public void setUserId(Long userId) {
         this.userId = userId;
     }
 
@@ -97,6 +105,7 @@ public class User implements Serializable {
                 ", profilePictureUrl='" + profilePictureUrl + '\'' +
                 ", isAdmin=" + isAdmin +
                 ", password='" + password + '\'' +
+                ", todos=" + todos +
                 '}';
     }
 }

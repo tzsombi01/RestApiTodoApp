@@ -1,6 +1,7 @@
 package com.tzsombi.services;
 
-import com.tzsombi.exceptions.AtAuthException;
+import com.tzsombi.exceptions.AuthException;
+import com.tzsombi.exceptions.UserNotFoundException;
 import com.tzsombi.model.User;
 import com.tzsombi.repositories.UserRepository;
 import org.mindrot.jbcrypt.BCrypt;
@@ -23,38 +24,39 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public void registerUser(User user) throws AtAuthException {
+    public void registerUser(User user) throws AuthException {
         Pattern pattern = Pattern.compile("^(.+)@(.+)$");
         if(user.getEmail() != null && user.getEmail().length() > 0) {
             user.setEmail(user.getEmail().toLowerCase());
             if(!pattern.matcher(user.getEmail()).matches()) {
-                throw new AtAuthException("Invalid Email Format!");
+                throw new AuthException("Invalid Email Format!");
             }
         }
         String hashedPassword = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt(10));
         user.setPassword(hashedPassword);
         Optional<User> optionalUser = userRepository.findByEmail(user.getEmail());
         if(optionalUser.isPresent()) {
-            throw new AtAuthException("Email is already in use!");
+            throw new AuthException("Email is already in use!");
         }
         userRepository.save(user);
     }
 
-    public List<User> getAllUser() {
+    public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
-    public void deleteUserById(Integer userId) throws AtAuthException {
+    public void deleteUserById(Long userId) throws UserNotFoundException {
         if(!userRepository.existsById(userId)) {
-            throw new AtAuthException("No user found with ID: " + userId + "!");
+            throw new UserNotFoundException("No user found with ID: " + userId + "!");
         }
         userRepository.deleteById(userId);
     }
 
     @Transactional
-    public void updateUser(Integer userId, String name, String email, String profilePictureUrl) throws AtAuthException {
+    public void updateUser(Long userId, String name, String email, String profilePictureUrl)
+            throws UserNotFoundException, AuthException {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AtAuthException("No user found with ID: " + userId + "!"));
+                .orElseThrow(() -> new UserNotFoundException("No user found with ID: " + userId + " !"));
         if (name != null && name.length() > 0 && !Objects.equals(user.getName(), name)) {
             user.setName(name);
         }
@@ -62,11 +64,11 @@ public class UserService {
         if(email != null && email.length() > 0) {
             email = email.toLowerCase();
             if(!pattern.matcher(email).matches()) {
-                throw new AtAuthException("Invalid Email Format!");
+                throw new AuthException("Invalid Email Format!");
             }
             Optional<User> optionalUser = userRepository.findByEmail(email);
             if(optionalUser.isPresent()) {
-                throw new AtAuthException("Email is already in use!");
+                throw new AuthException("Email is already in use!");
             }
             user.setEmail(email);
         }

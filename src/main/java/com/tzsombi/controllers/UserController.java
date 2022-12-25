@@ -1,4 +1,4 @@
-package com.tzsombi.resources;
+package com.tzsombi.controllers;
 
 import com.tzsombi.model.User;
 import com.tzsombi.services.UserService;
@@ -11,7 +11,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
-public class UserResource {
+public class UserController {
 
     @Autowired
     UserService userService;
@@ -19,28 +19,28 @@ public class UserResource {
     @PostMapping("/register")
     public ResponseEntity<String> registerUser(@RequestBody User user) {
         userService.registerUser(user);
-        return new ResponseEntity<>("Registered Successfully!", HttpStatus.OK);
+        return new ResponseEntity<>("Registered Successfully!", HttpStatus.CREATED);
     }
 
     @DeleteMapping("/delete/{userId}")
-    public ResponseEntity<String> deleteUserById(@PathVariable("userId") Integer userId) {
+    public ResponseEntity<String> deleteUserById(@PathVariable("userId") Long userId) {
         userService.deleteUserById(userId);
         return new ResponseEntity<>("User got deleted successfully!", HttpStatus.OK);
     }
 
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = userService.getAllUser();
+        List<User> users = userService.getAllUsers();
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
     @PutMapping("/update/{userId}")
     public ResponseEntity<String> updateUser(
-            @PathVariable("userId") Integer userId,
+            @PathVariable("userId") Long userId,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String profilePictureUrl) {
         userService.updateUser(userId, name, email, profilePictureUrl);
-        return new ResponseEntity<>("User updated!", HttpStatus.OK);
+        return new ResponseEntity<>("User updated successfully!", HttpStatus.OK);
     }
 }

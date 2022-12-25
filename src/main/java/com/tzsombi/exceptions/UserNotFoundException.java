@@ -3,9 +3,9 @@ package com.tzsombi.exceptions;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(HttpStatus.UNAUTHORIZED)
-public class AtAuthException extends RuntimeException {
-    public AtAuthException(String message) {
+@ResponseStatus(HttpStatus.NOT_FOUND)
+public class UserNotFoundException extends RuntimeException {
+    public UserNotFoundException(String message) {
         super(message);
     }
 }
