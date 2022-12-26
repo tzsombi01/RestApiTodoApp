@@ -16,31 +16,36 @@ public class TodoController {
     @Autowired
     TodoService todoService;
 
-    @PostMapping("/add")
-    public ResponseEntity<String> addTodo(@RequestBody Todo todo) {
-        todoService.addTodo(todo);
+    @PostMapping("/add/{modifierUserId}")
+    public ResponseEntity<String> addTodo(
+            @PathVariable("modifierUserId") Long modifierUserId,
+            @RequestBody Todo todo) {
+        todoService.addTodo(modifierUserId, todo);
         return new ResponseEntity<>("Successfully added Todo!", HttpStatus.CREATED);
     }
 
     @GetMapping
-    public ResponseEntity<List<Todo>> getAllTodos() {
-        List<Todo> todos = todoService.getAllTodos();
+    public ResponseEntity<List<Todo>> getAllTodos(@RequestParam Long userId) {
+        List<Todo> todos = todoService.getAllTodosOfUser(userId);
         return new ResponseEntity<>(todos, HttpStatus.OK);
     }
 
-    @PutMapping("/update/{todoId}")
+    @PutMapping("/update/{modifierUserId}")
     public ResponseEntity<String> updateTodo(
-            @PathVariable("todoId") Long todoId,
+            @PathVariable("modifierUserId") Long modifierUserId,
+            @RequestParam Long todoId,
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String description,
             @RequestParam(required = false) Boolean completed) {
-        todoService.updateTodo(todoId, title, description, completed);
+        todoService.updateTodo(modifierUserId, todoId, title, description, completed);
         return new ResponseEntity<>("Todo updated successfully!", HttpStatus.OK);
     }
 
-    @DeleteMapping("/delete/{todoId}")
-    public ResponseEntity<String> deleteTodoById(@PathVariable("todoId") Long todoId) {
-        todoService.deleteTodoById(todoId);
+    @DeleteMapping("/delete/{modifierUserId}")
+    public ResponseEntity<String> deleteTodoById(
+            @PathVariable("modifierUserId") Long modifierUserId,
+            @RequestParam Long todoId) {
+        todoService.deleteTodoById(modifierUserId, todoId);
         return new ResponseEntity<>("Todo got deleted successfully!", HttpStatus.OK);
     }
 }

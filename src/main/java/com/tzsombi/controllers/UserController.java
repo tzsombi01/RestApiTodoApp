@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -22,9 +23,11 @@ public class UserController {
         return new ResponseEntity<>("Registered Successfully!", HttpStatus.CREATED);
     }
 
-    @DeleteMapping("/delete/{userId}")
-    public ResponseEntity<String> deleteUserById(@PathVariable("userId") Long userId) {
-        userService.deleteUserById(userId);
+    @DeleteMapping("/delete/{deleterUserId}")
+    public ResponseEntity<String> deleteUserById(
+            @PathVariable("deleterUserId") Long deleterUserId,
+            @RequestParam(required = true)  Long userIdToDelete) {
+        userService.deleteUserById(deleterUserId, userIdToDelete);
         return new ResponseEntity<>("User got deleted successfully!", HttpStatus.OK);
     }
 
@@ -34,13 +37,22 @@ public class UserController {
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
-    @PutMapping("/update/{userId}")
+    @PutMapping("/update/{modifierUserId}")
     public ResponseEntity<String> updateUser(
-            @PathVariable("userId") Long userId,
+            @PathVariable("modifierUserId") Long modifierUserId,
+            @RequestParam(required = true)  Long userIdToModify,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String profilePictureUrl) {
-        userService.updateUser(userId, name, email, profilePictureUrl);
+        userService.updateUser(modifierUserId, userIdToModify, name, email, profilePictureUrl);
         return new ResponseEntity<>("User updated successfully!", HttpStatus.OK);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody Map<String, Object> userMap) {
+        String email = (String) userMap.get("email");
+        String password = (String) userMap.get("password");
+        User user = userService.validateUser(email, password);
+        return new ResponseEntity<>("Login successful", HttpStatus.ACCEPTED);
     }
 }

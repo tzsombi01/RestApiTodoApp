@@ -32,7 +32,6 @@ public class Todo implements Serializable {
 
     @Column(name = "user_id")
     private Long userId;
-
     public Todo() {
     }
 
