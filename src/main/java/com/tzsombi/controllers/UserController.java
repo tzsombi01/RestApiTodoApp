@@ -1,5 +1,7 @@
 package com.tzsombi.controllers;
 
+import com.tzsombi.exceptions.AuthException;
+import com.tzsombi.exceptions.UserNotFoundException;
 import com.tzsombi.model.User;
 import com.tzsombi.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -18,7 +21,8 @@ public class UserController {
     UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<String> registerUser(@RequestBody User user) {
+    public ResponseEntity<String> registerUser(@RequestBody User user)
+            throws UserNotFoundException, AuthException, IOException {
         userService.registerUser(user);
         return new ResponseEntity<>("Registered Successfully!", HttpStatus.CREATED);
     }
@@ -42,9 +46,8 @@ public class UserController {
             @PathVariable("modifierUserId") Long modifierUserId,
             @RequestParam(required = true)  Long userIdToModify,
             @RequestParam(required = false) String name,
-            @RequestParam(required = false) String email,
-            @RequestParam(required = false) String profilePictureUrl) {
-        userService.updateUser(modifierUserId, userIdToModify, name, email, profilePictureUrl);
+            @RequestParam(required = false) String email) {
+        userService.updateUser(modifierUserId, userIdToModify, name, email);
         return new ResponseEntity<>("User updated successfully!", HttpStatus.OK);
     }
 

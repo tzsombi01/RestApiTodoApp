@@ -7,6 +7,7 @@ import com.tzsombi.model.Todo;
 import com.tzsombi.model.User;
 import com.tzsombi.repositories.TodoRepository;
 import com.tzsombi.repositories.UserRepository;
+import com.tzsombi.utils.CredentialChecker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,19 +27,16 @@ public class TodoService {
         this.userRepository = userRepository;
     }
 
-    public void addTodo(Long modifierUserId, Todo todo) {
-        checkCredentialsOfModifierUser(modifierUserId, todo);
+    public void addTodo(Long modifierUserId, Todo todo) throws UserNotFoundException  {
+        Long userIdToModify = todo.getUserId();
+        if(!userRepository.existsById(userIdToModify)) {
+            throw new UserNotFoundException("No user found with ID: " + userIdToModify + "!");
+        }
+        CredentialChecker.checkCredentialsOfModifierUser(modifierUserId, userIdToModify, userRepository);
+
         todoRepository.save(todo);
     }
 
-    private void checkCredentialsOfModifierUser(Long modifierUserId, Todo todo) {
-        User user = userRepository.findById(modifierUserId)
-                .orElseThrow(() -> new UserNotFoundException("No user found with ID: " + modifierUserId + " !"));
-
-        if(!user.getIsAdmin() && !modifierUserId.equals(todo.getUserId())) {
-            throw new AuthException("User does not have permission to add a TODO to this user!");
-        }
-    }
     public List<Todo> getAllTodosOfUser(Long userId) {
         return todoRepository.findAllByUserId(userId);
     }
@@ -48,7 +46,12 @@ public class TodoService {
         Todo todo = todoRepository.findById(todoId)
                 .orElseThrow(() -> new TodoNotFoundException("No Todo found with id: " + todoId + "!"));
 
-        checkCredentialsOfModifierUser(modifierUserId, todo);
+        Long userIdToModify = todo.getUserId();
+        if(!userRepository.existsById(userIdToModify)) {
+            throw new UserNotFoundException("No user found with ID: " + userIdToModify + "!");
+        }
+
+        CredentialChecker.checkCredentialsOfModifierUser(modifierUserId, userIdToModify, userRepository);
 
         if(title != null
                 && title.length() > 0
@@ -67,7 +70,12 @@ public class TodoService {
         Todo todo = todoRepository.findById(todoId)
                         .orElseThrow(() -> new TodoNotFoundException("No Todo found with id: " + todoId + "!"));
 
-        checkCredentialsOfModifierUser(modifierUserId, todo);
+        Long userIdToModify = todo.getUserId();
+        if(!userRepository.existsById(userIdToModify)) {
+            throw new UserNotFoundException("No user found with ID: " + userIdToModify + "!");
+        }
+
+        CredentialChecker.checkCredentialsOfModifierUser(modifierUserId, userIdToModify, userRepository);
 
         todoRepository.deleteById(todoId);
     }

@@ -4,11 +4,15 @@ import com.tzsombi.exceptions.AuthException;
 import com.tzsombi.exceptions.UserNotFoundException;
 import com.tzsombi.model.User;
 import com.tzsombi.repositories.UserRepository;
+import com.tzsombi.utils.CredentialChecker;
+import com.tzsombi.utils.Logger;
+import com.tzsombi.utils.UserEmailObserver;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -18,12 +22,17 @@ public class UserService {
 
     private final UserRepository userRepository;
 
+    private final Logger logger;
+
+    private final UserEmailObserver userEmailObserver;
     @Autowired
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, Logger logger, UserEmailObserver userEmailObserver) {
         this.userRepository = userRepository;
+        this.logger = logger;
+        this.userEmailObserver = userEmailObserver;
     }
 
-    public void registerUser(User user) throws AuthException {
+    public void registerUser(User user) throws AuthException, IOException {
         Pattern pattern = Pattern.compile("^(.+)@(.+)$");
         if(user.getEmail() != null && user.getEmail().length() > 0) {
             user.setEmail(user.getEmail().toLowerCase());
@@ -31,12 +40,19 @@ public class UserService {
                 throw new AuthException("Invalid Email Format!");
             }
         }
+        ifUserPresentWithEmailThrowAuthException(user.getEmail());
+
         String hashedPassword = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt(10));
         user.setPassword(hashedPassword);
 
-        ifUserPresentWithEmailThrowAuthException(user.getEmail());
+        User createdUser = userRepository.save(user);
 
-        userRepository.save(user);
+        userEmailObserver.addObserver(user);
+        /*
+        System.out.println("doing");
+        String[] logLine = {createdUser.getUserId().toString(), "register"};
+        logger.convertDataToCSvAndWriteToFile(String.join(",", logLine));
+        System.out.println("AFTER");*/
     }
 
     private void ifUserPresentWithEmailThrowAuthException(String email) throws AuthException {
@@ -50,30 +66,28 @@ public class UserService {
     }
 
     public void deleteUserById(Long deleterUserId, Long userIdToDelete) throws UserNotFoundException {
-        User deleterUser = userRepository.findById(deleterUserId)
-                .orElseThrow(() -> new UserNotFoundException("No user found with ID: " + deleterUserId + " !"));
-        if(!deleterUser.getIsAdmin() && !deleterUserId.equals(userIdToDelete)) {
-            throw new AuthException("You do not have permission to delete user!");
-        }
+        CredentialChecker.checkCredentialsOfModifierUser(deleterUserId, userIdToDelete, userRepository);
 
         if(!userRepository.existsById(userIdToDelete)) {
             throw new UserNotFoundException("No user found with ID: " + userIdToDelete + "!");
         }
+
         userRepository.deleteById(userIdToDelete);
     }
 
+
+
     @Transactional
-    public void updateUser(Long modifierUserId, Long userIdToModify, String name, String email, String profilePictureUrl)
+    public void updateUser(Long modifierUserId,
+                           Long userIdToModify,
+                           String name,
+                           String email)
             throws UserNotFoundException, AuthException {
-        User modifyingUser = userRepository.findById(modifierUserId)
-                .orElseThrow(() -> new UserNotFoundException("No user found with ID: " + modifierUserId + " !"));
+        CredentialChecker.checkCredentialsOfModifierUser(modifierUserId, userIdToModify, userRepository);
 
         User userToModify = userRepository.findById(userIdToModify)
                 .orElseThrow(() -> new UserNotFoundException("No user found with ID: " + userIdToModify + " !"));
 
-        if(!modifyingUser.getIsAdmin() && !modifierUserId.equals(userIdToModify)) {
-            throw new AuthException("You do not have permission to modify user!");
-        }
         if (name != null && name.length() > 0 && !Objects.equals(userToModify.getName(), name)) {
             userToModify.setName(name);
         }
@@ -88,12 +102,6 @@ public class UserService {
             ifUserPresentWithEmailThrowAuthException(email);
 
             userToModify.setEmail(email);
-        }
-
-        if(profilePictureUrl != null
-                && profilePictureUrl.length() > 0
-                && !Objects.equals(userToModify.getProfilePictureUrl(), profilePictureUrl)) {
-            userToModify.setProfilePictureUrl(profilePictureUrl);
         }
     }
 
