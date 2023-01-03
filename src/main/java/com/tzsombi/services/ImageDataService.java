@@ -40,43 +40,34 @@ public class ImageDataService {
         ImageData image = imageDataRepository.save(ImageData.builder()
                 .name(file.getOriginalFilename())
                 .type(file.getContentType())
+                .user(userToModify)
                 .imageData(ImageUtil.compressImage(file.getBytes())).build());
 
-        setUserProfilePicture(userToModify, image);
-        System.out.println("Image's userId: " + image.getUser().getUserId());
-        System.out.println("User's imageId: " + userToModify.getImage().getImageId());
-
-        return "Image uploaded successfully: " +  file.getOriginalFilename();
-    }
-
-    @Transactional
-    private void setUserProfilePicture(User userToModify, ImageData image) {
-        image.setUser(userToModify);
         userToModify.setImage(image);
+        userRepository.save(userToModify);
+
+        return "Image uploaded successfully: " + file.getOriginalFilename();
     }
 
-    @Transactional
     public byte[] getImageById(Long imageId) throws IOException, DataFormatException {
-        ImageData dbImage = imageDataRepository.findById(imageId)
-                .orElseThrow(() -> new ImageDataNotFoundException("No image data found with id " + imageId + "!"));
-        return ImageUtil.decompressImage(dbImage.getImageData());
+        ImageData image = imageDataRepository.findById(imageId)
+                .orElseThrow(() -> new ImageDataNotFoundException("No image found with id " + imageId + "!"));
+        return ImageUtil.decompressImage(image.getImageData());
     }
 
     public void deleteImageById(Long modifierUserId, Long userIdToModify, Long imageId)
-            throws ImageDataNotFoundException, UserNotFoundException, ImageNotFoundUnderUser {
-        if(!imageDataRepository.existsById(imageId)) {
-            throw new ImageDataNotFoundException("No image data found with id " + imageId + "!");
-        }
+            throws ImageDataNotFoundException, UserNotFoundException {
+
+        ImageData image = imageDataRepository.findById(imageId)
+                .orElseThrow(() -> new ImageDataNotFoundException("No image found with id " + imageId + "!"));
 
         User userToModify = userRepository.findById(userIdToModify)
                 .orElseThrow(() -> new UserNotFoundException("No user found with ID: " + userIdToModify + "!"));
 
-        // if(!userToModify.getImage().getImageId().equals(imageId)) {
-        //     throw new ImageNotFoundUnderUser("The user does not have this image!");
-        // }
-
         CredentialChecker.checkCredentialsOfModifierUser(modifierUserId, userIdToModify, userRepository);
 
-        imageDataRepository.deleteById(imageId);
+        userToModify.setImage(null);
+        userRepository.save(userToModify);
+        imageDataRepository.delete(image);
     }
 }

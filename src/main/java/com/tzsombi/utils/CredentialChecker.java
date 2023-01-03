@@ -14,8 +14,9 @@ public class CredentialChecker {
         User modifyingUser = userRepository.findById(modifierUserId)
                 .orElseThrow(() -> new UserNotFoundException("No user found with ID: " + modifierUserId + " !"));
 
-        if(!modifyingUser.isAdmin() && !modifierUserId.equals(userIdToModify)) {
-            throw new AuthException("You do not have permission to modify user!");
+        if(modifyingUser.isAdmin() || modifierUserId.equals(userIdToModify)) {
+            return;
         }
+        throw new AuthException("You do not have permission to modify user!");
     }
 }

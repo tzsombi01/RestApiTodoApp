@@ -1,6 +1,7 @@
 package com.tzsombi.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
@@ -21,14 +22,14 @@ public class ImageData implements Serializable {
     @SequenceGenerator(
             name = "ta_images_sequence",
             sequenceName=  "ta_images_sequence",
-            allocationSize = 10
+            allocationSize = 1
     )
     @GeneratedValue(
             strategy = GenerationType.SEQUENCE,
             generator = "ta_images_sequence"
     )
-    @Column(name = "image_id", updatable = false, nullable = false)
-    private Long imageId;
+    @Column(updatable = false, nullable = false)
+    private Long id;
 
     @Column(nullable = false)
     private String name;
@@ -42,5 +43,6 @@ public class ImageData implements Serializable {
 
     @OneToOne(mappedBy = "image")
     @JsonManagedReference
+    @JsonIgnore
     private User user;
 }

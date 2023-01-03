@@ -1,6 +1,7 @@
 package com.tzsombi.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,15 +18,15 @@ public class User implements Serializable {
     @Id
     @SequenceGenerator(
             name = "ta_users_sequence",
-            sequenceName=  "ta_users_sequence",
+            sequenceName= "ta_users_sequence",
             allocationSize = 1
     )
     @GeneratedValue(
             strategy = GenerationType.SEQUENCE,
             generator = "ta_users_sequence"
     )
-    @Column(name = "user_id", nullable = false, updatable = false)
-    private Long userId;
+    @Column(nullable = false, updatable = false)
+    private Long id;
 
     @Column(nullable = false)
     private String name;
@@ -44,8 +45,9 @@ public class User implements Serializable {
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
-    @JoinColumn(name = "fk_image_id", referencedColumnName = "image_id")
+    @JoinColumn(name = "image_id", referencedColumnName = "id")
     @JsonBackReference
+    @ToString.Exclude
     private ImageData image;
 
     @OneToMany(
@@ -53,7 +55,7 @@ public class User implements Serializable {
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
-    @JoinColumn(name = "user_id", referencedColumnName = "user_id")
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
     @ToString.Exclude
     private List<Todo> todos;
 }

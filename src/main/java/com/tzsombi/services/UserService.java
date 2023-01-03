@@ -46,13 +46,6 @@ public class UserService {
         user.setPassword(hashedPassword);
 
         User createdUser = userRepository.save(user);
-
-        userEmailObserver.addObserver(user);
-        /*
-        System.out.println("doing");
-        String[] logLine = {createdUser.getUserId().toString(), "register"};
-        logger.convertDataToCSvAndWriteToFile(String.join(",", logLine));
-        System.out.println("AFTER");*/
     }
 
     private void ifUserPresentWithEmailThrowAuthException(String email) throws AuthException {

@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.io.Serializable;
+import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 @Entity
 @Table(name = "ta_todos")
@@ -25,8 +27,8 @@ public class Todo implements Serializable {
             strategy = GenerationType.SEQUENCE,
             generator = "ta_todo_sequence"
     )
-    @Column(name = "todo_id", nullable = false, updatable = false)
-    private Long todoId;
+    @Column(nullable = false, updatable = false)
+    private Long id;
 
     @Column(nullable = false)
     private String title;
