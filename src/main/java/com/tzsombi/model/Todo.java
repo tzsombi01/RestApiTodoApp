@@ -47,4 +47,8 @@ public class Todo implements Serializable {
 
     @Column(name = "user_id")
     private Long userId;
+
+    public boolean isItDueInADay(Clock clock) {
+        return ChronoUnit.HOURS.between(LocalDateTime.now(clock), this.getDueDate()) <= 24;
+    }
 }

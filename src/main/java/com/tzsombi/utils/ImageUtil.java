@@ -41,9 +41,9 @@ public class ImageUtil {
             }
             outputStream.close();
         } catch(IOException e) {
-            throw new IOException("Could not close properly " + e);
+            throw new IOException("Could not write / close properly");
         } catch(DataFormatException e) {
-            throw new DataFormatException("Input data's format is invalid " + e);
+            throw new DataFormatException("Input data's format is invalid ");
         }
 
         return outputStream.toByteArray();

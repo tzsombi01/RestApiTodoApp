@@ -3,7 +3,7 @@ package com.tzsombi.controllers;
 import com.tzsombi.exceptions.ImageDataNotFoundException;
 import com.tzsombi.exceptions.ImageNotFoundUnderUser;
 import com.tzsombi.exceptions.UserNotFoundException;
-import com.tzsombi.services.ImageDataService;
+import com.tzsombi.services.ImageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -11,15 +11,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.security.sasl.AuthenticationException;
 import java.io.IOException;
 import java.util.zip.DataFormatException;
 
 @RestController
 @RequestMapping("/api/images")
-public class ImageDataController {
+public class ImageController {
     @Autowired
-    private ImageDataService imageDataService;
+    private ImageService imageDataService;
 
     @PostMapping("/upload/{modifierUserId}")
     public ResponseEntity<String> uploadImage(

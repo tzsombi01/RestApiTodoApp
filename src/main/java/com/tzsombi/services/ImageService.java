@@ -1,15 +1,14 @@
 package com.tzsombi.services;
 
 import com.tzsombi.exceptions.ImageDataNotFoundException;
-import com.tzsombi.exceptions.ImageNotFoundUnderUser;
 import com.tzsombi.exceptions.UserNotFoundException;
-import com.tzsombi.model.ImageData;
+import com.tzsombi.model.Image;
 import com.tzsombi.model.User;
-import com.tzsombi.repositories.ImageDataRepository;
+import com.tzsombi.repositories.ImageRepository;
 import com.tzsombi.repositories.UserRepository;
 import com.tzsombi.utils.CredentialChecker;
+import com.tzsombi.utils.ErrorConstants;
 import com.tzsombi.utils.ImageUtil;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,14 +17,14 @@ import java.io.IOException;
 import java.util.zip.DataFormatException;
 
 @Service
-public class ImageDataService {
+public class ImageService {
 
-    ImageDataRepository imageDataRepository;
+    ImageRepository imageDataRepository;
 
     UserRepository userRepository;
 
     @Autowired
-    public ImageDataService(ImageDataRepository imageDataRepository, UserRepository userRepository) {
+    public ImageService(ImageRepository imageDataRepository, UserRepository userRepository) {
         this.imageDataRepository = imageDataRepository;
         this.userRepository = userRepository;
     }
@@ -35,9 +34,10 @@ public class ImageDataService {
         CredentialChecker.checkCredentialsOfModifierUser(modifierUserId, userIdToModify, userRepository);
 
         User userToModify = userRepository.findById(userIdToModify)
-                .orElseThrow(() -> new UserNotFoundException("No user found with ID: " + userIdToModify + "!"));
+                .orElseThrow(() -> new UserNotFoundException(
+                        String.format(ErrorConstants.USER_NOT_FOUND_MESSAGE, userIdToModify)));
 
-        ImageData image = imageDataRepository.save(ImageData.builder()
+        Image image = imageDataRepository.save(Image.builder()
                 .name(file.getOriginalFilename())
                 .type(file.getContentType())
                 .user(userToModify)
@@ -50,19 +50,23 @@ public class ImageDataService {
     }
 
     public byte[] getImageById(Long imageId) throws IOException, DataFormatException {
-        ImageData image = imageDataRepository.findById(imageId)
-                .orElseThrow(() -> new ImageDataNotFoundException("No image found with id " + imageId + "!"));
+        Image image = imageDataRepository.findById(imageId)
+                .orElseThrow(() -> new ImageDataNotFoundException(
+                        String.format(ErrorConstants.IMAGE_NOT_FOUND_MESSAGE, imageId)));
+
         return ImageUtil.decompressImage(image.getImageData());
     }
 
     public void deleteImageById(Long modifierUserId, Long userIdToModify, Long imageId)
             throws ImageDataNotFoundException, UserNotFoundException {
 
-        ImageData image = imageDataRepository.findById(imageId)
-                .orElseThrow(() -> new ImageDataNotFoundException("No image found with id " + imageId + "!"));
+        Image image = imageDataRepository.findById(imageId)
+                .orElseThrow(() -> new ImageDataNotFoundException(
+                        String.format(ErrorConstants.IMAGE_NOT_FOUND_MESSAGE, imageId)));
 
         User userToModify = userRepository.findById(userIdToModify)
-                .orElseThrow(() -> new UserNotFoundException("No user found with ID: " + userIdToModify + "!"));
+                .orElseThrow(() -> new UserNotFoundException(
+                        String.format(ErrorConstants.USER_NOT_FOUND_MESSAGE, userIdToModify)));
 
         CredentialChecker.checkCredentialsOfModifierUser(modifierUserId, userIdToModify, userRepository);
 

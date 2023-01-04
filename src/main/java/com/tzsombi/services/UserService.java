@@ -5,8 +5,8 @@ import com.tzsombi.exceptions.UserNotFoundException;
 import com.tzsombi.model.User;
 import com.tzsombi.repositories.UserRepository;
 import com.tzsombi.utils.CredentialChecker;
-import com.tzsombi.utils.Logger;
-import com.tzsombi.utils.UserEmailObserver;
+import com.tzsombi.utils.ErrorConstants;
+import com.tzsombi.utils.EmailSendingObserver;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,13 +22,10 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    private final Logger logger;
-
-    private final UserEmailObserver userEmailObserver;
+    private final EmailSendingObserver userEmailObserver;
     @Autowired
-    public UserService(UserRepository userRepository, Logger logger, UserEmailObserver userEmailObserver) {
+    public UserService(UserRepository userRepository, EmailSendingObserver userEmailObserver) {
         this.userRepository = userRepository;
-        this.logger = logger;
         this.userEmailObserver = userEmailObserver;
     }
 
@@ -37,7 +34,7 @@ public class UserService {
         if(user.getEmail() != null && user.getEmail().length() > 0) {
             user.setEmail(user.getEmail().toLowerCase());
             if(!pattern.matcher(user.getEmail()).matches()) {
-                throw new AuthException("Invalid Email Format!");
+                throw new AuthException(ErrorConstants.INVALID_EMAIL_FORMAT);
             }
         }
         ifUserPresentWithEmailThrowAuthException(user.getEmail());
@@ -46,11 +43,13 @@ public class UserService {
         user.setPassword(hashedPassword);
 
         User createdUser = userRepository.save(user);
+
+        userEmailObserver.addObserver(createdUser);
     }
 
     private void ifUserPresentWithEmailThrowAuthException(String email) throws AuthException {
         if(userRepository.existsByEmail(email)) {
-            throw new AuthException("Email is already in use!");
+            throw new AuthException(ErrorConstants.EMAIL_IS_ALREADY_IN_USE);
         }
     }
 
@@ -61,13 +60,13 @@ public class UserService {
     public void deleteUserById(Long deleterUserId, Long userIdToDelete) throws UserNotFoundException {
         CredentialChecker.checkCredentialsOfModifierUser(deleterUserId, userIdToDelete, userRepository);
 
-        if(!userRepository.existsById(userIdToDelete)) {
-            throw new UserNotFoundException("No user found with ID: " + userIdToDelete + "!");
-        }
+        User userToDelete = userRepository.findById(userIdToDelete)
+                        .orElseThrow(() -> new UserNotFoundException(
+                                String.format(ErrorConstants.USER_NOT_FOUND_MESSAGE, userIdToDelete)));
 
-        userRepository.deleteById(userIdToDelete);
+        userEmailObserver.removeObserver(userToDelete);
+        userRepository.delete(userToDelete);
     }
-
 
 
     @Transactional
@@ -79,7 +78,8 @@ public class UserService {
         CredentialChecker.checkCredentialsOfModifierUser(modifierUserId, userIdToModify, userRepository);
 
         User userToModify = userRepository.findById(userIdToModify)
-                .orElseThrow(() -> new UserNotFoundException("No user found with ID: " + userIdToModify + " !"));
+                .orElseThrow(() -> new UserNotFoundException(
+                        String.format(ErrorConstants.USER_NOT_FOUND_MESSAGE, userIdToModify)));
 
         if (name != null && name.length() > 0 && !Objects.equals(userToModify.getName(), name)) {
             userToModify.setName(name);
@@ -90,7 +90,7 @@ public class UserService {
             email = email.toLowerCase();
 
             if(!pattern.matcher(email).matches()) {
-                throw new AuthException("Invalid Email Format!");
+                throw new AuthException(ErrorConstants.INVALID_EMAIL_FORMAT);
             }
             ifUserPresentWithEmailThrowAuthException(email);
 
@@ -98,7 +98,7 @@ public class UserService {
         }
     }
 
-    public User validateUser(String email, String password) throws AuthException {
+    public void validateUser(String email, String password) throws AuthException {
         if(email != null && email.length() > 0) {
             email = email.toLowerCase();
         }
@@ -107,6 +107,5 @@ public class UserService {
         if(!BCrypt.checkpw(password, user.getPassword())) {
             throw new AuthException("Invalid email/password!");
         }
-        return user;
     }
 }

@@ -1,7 +1,6 @@
 package com.tzsombi.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -41,14 +40,14 @@ public class User implements Serializable {
     private String password;
 
     @OneToOne(
-            targetEntity = ImageData.class,
+            targetEntity = Image.class,
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
     @JoinColumn(name = "image_id", referencedColumnName = "id")
     @JsonBackReference
     @ToString.Exclude
-    private ImageData image;
+    private Image image;
 
     @OneToMany(
             targetEntity = Todo.class,

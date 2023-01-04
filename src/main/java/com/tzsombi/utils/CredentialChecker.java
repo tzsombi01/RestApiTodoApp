@@ -12,11 +12,12 @@ public class CredentialChecker {
             Long userIdToModify,
             UserRepository userRepository) throws UserNotFoundException, AuthException {
         User modifyingUser = userRepository.findById(modifierUserId)
-                .orElseThrow(() -> new UserNotFoundException("No user found with ID: " + modifierUserId + " !"));
+                .orElseThrow(() -> new UserNotFoundException(
+                        String.format(ErrorConstants.USER_NOT_FOUND_MESSAGE, userIdToModify)));
 
         if(modifyingUser.isAdmin() || modifierUserId.equals(userIdToModify)) {
             return;
         }
-        throw new AuthException("You do not have permission to modify user!");
+        throw new AuthException(ErrorConstants.NO_PERMISSION_TO_MODIFY_USER);
     }
 }

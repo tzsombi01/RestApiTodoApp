@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -36,8 +37,9 @@ public class TodoController {
             @RequestParam Long todoId,
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String description,
+            @RequestParam(required = false) LocalDateTime dueDate,
             @RequestParam(required = false) Boolean completed) {
-        todoService.updateTodo(modifierUserId, todoId, title, description, completed);
+        todoService.updateTodo(modifierUserId, todoId, title, description, dueDate, completed);
         return new ResponseEntity<>("Todo updated successfully!", HttpStatus.OK);
     }
 

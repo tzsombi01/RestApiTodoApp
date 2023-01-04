@@ -1,6 +1,5 @@
 package com.tzsombi.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -16,7 +15,7 @@ import java.io.Serializable;
 @Setter
 @ToString
 @Builder
-public class ImageData implements Serializable {
+public class Image implements Serializable {
 
     @Id
     @SequenceGenerator(

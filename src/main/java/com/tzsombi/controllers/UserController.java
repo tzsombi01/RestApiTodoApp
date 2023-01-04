@@ -55,7 +55,7 @@ public class UserController {
     public ResponseEntity<String> login(@RequestBody Map<String, Object> userMap) {
         String email = (String) userMap.get("email");
         String password = (String) userMap.get("password");
-        User user = userService.validateUser(email, password);
+        userService.validateUser(email, password);
         return new ResponseEntity<>("Login successful", HttpStatus.ACCEPTED);
     }
 }
