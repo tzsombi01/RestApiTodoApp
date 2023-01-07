@@ -6,7 +6,7 @@ import com.tzsombi.model.User;
 import com.tzsombi.repositories.UserRepository;
 import com.tzsombi.utils.CredentialChecker;
 import com.tzsombi.utils.ErrorConstants;
-import com.tzsombi.utils.EmailSendingObserver;
+import com.tzsombi.utils.Logger;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,14 +22,16 @@ public class UserService {
 
     private final UserRepository userRepository;
 
+    private final Logger logger;
     private final EmailSendingObserver userEmailObserver;
     @Autowired
-    public UserService(UserRepository userRepository, EmailSendingObserver userEmailObserver) {
+    public UserService(UserRepository userRepository, Logger logger, EmailSendingObserver userEmailObserver) {
         this.userRepository = userRepository;
+        this.logger = logger;
         this.userEmailObserver = userEmailObserver;
     }
 
-    public void registerUser(User user) throws AuthException, IOException {
+    public void registerUser(User user) throws AuthException {
         Pattern pattern = Pattern.compile("^(.+)@(.+)$");
         if(user.getEmail() != null && user.getEmail().length() > 0) {
             user.setEmail(user.getEmail().toLowerCase());
@@ -45,6 +47,7 @@ public class UserService {
         User createdUser = userRepository.save(user);
 
         userEmailObserver.addObserver(createdUser);
+        // logger.convertDataToCSvAndWriteToFile("register user," + createdUser.getId());
     }
 
     private void ifUserPresentWithEmailThrowAuthException(String email) throws AuthException {
@@ -70,10 +73,7 @@ public class UserService {
 
 
     @Transactional
-    public void updateUser(Long modifierUserId,
-                           Long userIdToModify,
-                           String name,
-                           String email)
+    public void updateUser(Long modifierUserId, Long userIdToModify,String name, String email)
             throws UserNotFoundException, AuthException {
         CredentialChecker.checkCredentialsOfModifierUser(modifierUserId, userIdToModify, userRepository);
 
@@ -103,9 +103,9 @@ public class UserService {
             email = email.toLowerCase();
         }
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new AuthException("Invalid email/password!"));
+                .orElseThrow(() -> new AuthException(ErrorConstants.INVALID_EMAIL_OR_PASSWORD));
         if(!BCrypt.checkpw(password, user.getPassword())) {
-            throw new AuthException("Invalid email/password!");
+            throw new AuthException(ErrorConstants.INVALID_EMAIL_OR_PASSWORD);
         }
     }
 }

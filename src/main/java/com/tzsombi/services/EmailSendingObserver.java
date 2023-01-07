@@ -1,8 +1,7 @@
-package com.tzsombi.utils;
+package com.tzsombi.services;
 
 import com.tzsombi.model.User;
 import com.tzsombi.repositories.TodoRepository;
-import com.tzsombi.services.EmailService;
 import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -42,7 +41,7 @@ public class EmailSendingObserver {
         users.forEach(user -> {
             todoRepository.findAllByUserId(user.getId())
                     .stream()
-                    .filter(todo -> !todo.isNotified() && todo.isItDueInADay(clock))
+                    .filter(todo -> !todo.isNotified() && !todo.isCompleted() && todo.isItDueInADay(clock))
                     .forEach(todo -> {
                         try {
                             emailService.sendEmail(user, todo);

@@ -19,12 +19,13 @@ import java.util.Objects;
 
 @Service
 public class TodoService {
+
     private final TodoRepository todoRepository;
+
     private final UserRepository userRepository;
 
     @Autowired
-    public TodoService(TodoRepository todoRepository,
-                       UserRepository userRepository) {
+    public TodoService(TodoRepository todoRepository, UserRepository userRepository) {
         this.todoRepository = todoRepository;
         this.userRepository = userRepository;
     }
@@ -64,9 +65,7 @@ public class TodoService {
 
         CredentialChecker.checkCredentialsOfModifierUser(modifierUserId, userIdToModify, userRepository);
 
-        if(title != null
-                && title.length() > 0
-                && !Objects.equals(todo.getTitle(), title)) {
+        if(title != null && !Objects.equals(todo.getTitle(), title)) {
             todo.setTitle(title);
         }
 
@@ -74,7 +73,7 @@ public class TodoService {
             todo.setDescription(description);
         }
 
-        if(dueDate != null && dueDate.isAfter(LocalDateTime.now(Clock.systemDefaultZone()))
+        if(dueDate != null && dueDate.isAfter(LocalDateTime.now())
                 && !Objects.equals(todo.getDueDate(), dueDate)) {
             todo.setDueDate(dueDate);
             todo.setNotified(false);

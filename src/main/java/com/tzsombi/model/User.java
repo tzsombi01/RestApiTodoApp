@@ -15,15 +15,7 @@ import java.util.List;
 @ToString
 public class User implements Serializable {
     @Id
-    @SequenceGenerator(
-            name = "ta_users_sequence",
-            sequenceName= "ta_users_sequence",
-            allocationSize = 1
-    )
-    @GeneratedValue(
-            strategy = GenerationType.SEQUENCE,
-            generator = "ta_users_sequence"
-    )
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(nullable = false, updatable = false)
     private Long id;
 
@@ -46,13 +38,11 @@ public class User implements Serializable {
     )
     @JoinColumn(name = "image_id", referencedColumnName = "id")
     @JsonBackReference
-    @ToString.Exclude
     private Image image;
 
     @OneToMany(
             targetEntity = Todo.class,
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
+            cascade = CascadeType.ALL
     )
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     @ToString.Exclude

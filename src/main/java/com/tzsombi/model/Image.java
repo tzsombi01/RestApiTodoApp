@@ -18,15 +18,7 @@ import java.io.Serializable;
 public class Image implements Serializable {
 
     @Id
-    @SequenceGenerator(
-            name = "ta_images_sequence",
-            sequenceName=  "ta_images_sequence",
-            allocationSize = 1
-    )
-    @GeneratedValue(
-            strategy = GenerationType.SEQUENCE,
-            generator = "ta_images_sequence"
-    )
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(updatable = false, nullable = false)
     private Long id;
 

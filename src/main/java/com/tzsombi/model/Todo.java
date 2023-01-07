@@ -1,5 +1,6 @@
 package com.tzsombi.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,15 +19,7 @@ import java.time.temporal.ChronoUnit;
 public class Todo implements Serializable {
 
     @Id
-    @SequenceGenerator(
-            name = "ta_todo_sequence",
-            sequenceName = "ta_todo_sequence",
-            allocationSize = 10
-    )
-    @GeneratedValue(
-            strategy = GenerationType.SEQUENCE,
-            generator = "ta_todo_sequence"
-    )
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(nullable = false, updatable = false)
     private Long id;
 

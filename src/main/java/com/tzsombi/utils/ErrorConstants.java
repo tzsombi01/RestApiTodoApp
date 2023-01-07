@@ -10,7 +10,10 @@ public class ErrorConstants {
     public static final String IMAGE_NOT_FOUND_MESSAGE = "No image found with id %d!";
 
     public static final String INVALID_EMAIL_FORMAT = "Invalid Email Format!";
+
+    public static final String INVALID_EMAIL_OR_PASSWORD = "Invalid email/password!";
     public static final String EMAIL_IS_ALREADY_IN_USE = "Email is already in use!";
 
     public static final String NO_PERMISSION_TO_MODIFY_USER = "You do not have permission to modify user!";
+    public static final String IMAGE_NOT_FOUND_UNDER_USER = "Image not found under user!";
 }

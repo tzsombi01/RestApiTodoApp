@@ -1,6 +1,7 @@
 package com.tzsombi.services;
 
 import com.tzsombi.exceptions.ImageDataNotFoundException;
+import com.tzsombi.exceptions.ImageNotFoundUnderUser;
 import com.tzsombi.exceptions.UserNotFoundException;
 import com.tzsombi.model.Image;
 import com.tzsombi.model.User;
@@ -58,7 +59,7 @@ public class ImageService {
     }
 
     public void deleteImageById(Long modifierUserId, Long userIdToModify, Long imageId)
-            throws ImageDataNotFoundException, UserNotFoundException {
+            throws ImageDataNotFoundException, UserNotFoundException, ImageNotFoundUnderUser {
 
         Image image = imageDataRepository.findById(imageId)
                 .orElseThrow(() -> new ImageDataNotFoundException(
@@ -67,6 +68,10 @@ public class ImageService {
         User userToModify = userRepository.findById(userIdToModify)
                 .orElseThrow(() -> new UserNotFoundException(
                         String.format(ErrorConstants.USER_NOT_FOUND_MESSAGE, userIdToModify)));
+
+        if(userToModify.getImage() == null ||!userToModify.getImage().equals(image)) {
+            throw new ImageNotFoundUnderUser(ErrorConstants.IMAGE_NOT_FOUND_UNDER_USER);
+        }
 
         CredentialChecker.checkCredentialsOfModifierUser(modifierUserId, userIdToModify, userRepository);
 
