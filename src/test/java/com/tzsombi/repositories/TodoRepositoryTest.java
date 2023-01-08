@@ -41,7 +41,7 @@ class TodoRepositoryTest {
         todo.setTitle("My Title");
         todo.setDescription("Description");
         todo.setUserId(savedUser.getId());
-        todo.setDueDate(LocalDateTime.now(Clock.systemDefaultZone()).plusHours(1));
+        todo.setDueDate(LocalDateTime.now().plusSeconds(1));
         todo.setCompleted(false);
         Todo savedTodo = underTestTodoRepository.save(todo);
 

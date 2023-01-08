@@ -5,8 +5,7 @@ import org.springframework.core.io.Resource;
 
 public class Constants {
 
-    public static final Resource STATIC_FOLDER_CSV_PATH_RESOURCE =
-            new ClassPathResource("resources/logfiles.csv");
+    public static final String PATH_TO_LOGS_CSV = "RestApiTodoApp\\src\\main\\java\\com\\tzsombi\\logging\\logs.csv";
 
     public static final String EMAIL_SUBJECT = "Your task \"%s\" is due in 24 hours!";
 

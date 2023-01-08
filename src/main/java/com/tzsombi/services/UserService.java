@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -31,7 +32,7 @@ public class UserService {
         this.userEmailObserver = userEmailObserver;
     }
 
-    public void registerUser(User user) throws AuthException {
+    public void registerUser(User user) throws AuthException, IOException {
         Pattern pattern = Pattern.compile("^(.+)@(.+)$");
         if(user.getEmail() != null && user.getEmail().length() > 0) {
             user.setEmail(user.getEmail().toLowerCase());
@@ -47,7 +48,13 @@ public class UserService {
         User createdUser = userRepository.save(user);
 
         userEmailObserver.addObserver(createdUser);
-        // logger.convertDataToCSvAndWriteToFile("register user," + createdUser.getId());
+
+        String logLine = String.join(",",
+                "add user",
+                createdUser.getId().toString(),
+                createdUser.getId().toString(),
+                LocalDateTime.now().toString());
+        logger.convertDataToCSvAndWriteToFile(logLine);
     }
 
     private void ifUserPresentWithEmailThrowAuthException(String email) throws AuthException {
@@ -60,7 +67,7 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public void deleteUserById(Long deleterUserId, Long userIdToDelete) throws UserNotFoundException {
+    public void deleteUserById(Long deleterUserId, Long userIdToDelete) throws UserNotFoundException, IOException {
         CredentialChecker.checkCredentialsOfModifierUser(deleterUserId, userIdToDelete, userRepository);
 
         User userToDelete = userRepository.findById(userIdToDelete)
@@ -69,17 +76,26 @@ public class UserService {
 
         userEmailObserver.removeObserver(userToDelete);
         userRepository.delete(userToDelete);
+
+        String logLine = String.join(",",
+                "delete user",
+                deleterUserId.toString(),
+                userIdToDelete.toString(),
+                LocalDateTime.now().toString());
+        logger.convertDataToCSvAndWriteToFile(logLine);
     }
 
 
     @Transactional
-    public void updateUser(Long modifierUserId, Long userIdToModify,String name, String email)
-            throws UserNotFoundException, AuthException {
+    public User updateUser(Long modifierUserId, Long userIdToModify, String name, String email)
+            throws UserNotFoundException, AuthException, IOException {
         CredentialChecker.checkCredentialsOfModifierUser(modifierUserId, userIdToModify, userRepository);
 
         User userToModify = userRepository.findById(userIdToModify)
                 .orElseThrow(() -> new UserNotFoundException(
                         String.format(ErrorConstants.USER_NOT_FOUND_MESSAGE, userIdToModify)));
+
+        userEmailObserver.removeObserver(userToModify);
 
         if (name != null && name.length() > 0 && !Objects.equals(userToModify.getName(), name)) {
             userToModify.setName(name);
@@ -96,6 +112,17 @@ public class UserService {
 
             userToModify.setEmail(email);
         }
+
+        String logLine = String.join(",",
+                "update user",
+                modifierUserId.toString(),
+                userIdToModify.toString(),
+                LocalDateTime.now().toString());
+        logger.convertDataToCSvAndWriteToFile(logLine);
+
+        userEmailObserver.addObserver(userToModify);
+
+        return userToModify;
     }
 
     public void validateUser(String email, String password) throws AuthException {

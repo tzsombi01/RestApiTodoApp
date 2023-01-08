@@ -8,16 +8,18 @@ import java.io.*;
 public class Logger {
 
     public void convertDataToCSvAndWriteToFile(String logLine) throws IOException {
-        try {
-            // String pathToCsvLocation = Constants.STATIC_FOLDER_CSV_PATH_RESOURCE.getFile().getAbsolutePath();
-            // File csvOutputFile = new File(pathToCsvLocation);
+        if(System.getenv("IS_TESTING").equals("true")) {
+            return;
+        }
 
-            try (FileOutputStream logFile = new FileOutputStream(Constants.STATIC_FOLDER_CSV_PATH_RESOURCE.getFile())) {
-                logFile.write(logLine.getBytes());
-                logFile.write("\n".getBytes());
-            }
+        File newFile = new File(Constants.PATH_TO_LOGS_CSV);
+
+        try {
+            FileWriter fileWriter = new FileWriter (newFile, true);
+            fileWriter.write(logLine + "\n");
+            fileWriter.close();
         } catch(IOException exception) {
-            throw new IOException("File not found!" + exception);
+            throw new IOException(ErrorConstants.FILE_NOT_FOUND);
         }
     }
 }

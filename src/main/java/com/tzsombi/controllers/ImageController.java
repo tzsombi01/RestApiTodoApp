@@ -45,7 +45,7 @@ public class ImageController {
             @PathVariable("modifierUserId") Long modifierUserId,
             @RequestParam("userIdToModify") Long userIdToModify,
             @RequestParam("imageId") Long imageId)
-            throws ImageDataNotFoundException, UserNotFoundException, ImageNotFoundUnderUser {
+            throws ImageDataNotFoundException, UserNotFoundException, ImageNotFoundUnderUser, IOException {
 
         imageDataService.deleteImageById(modifierUserId, userIdToModify, imageId);
         return new ResponseEntity<>("Image deleted successfully!", HttpStatus.OK);

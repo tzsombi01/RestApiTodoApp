@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -20,7 +21,7 @@ public class TodoController {
     @PostMapping("/add/{modifierUserId}")
     public ResponseEntity<String> addTodo(
             @PathVariable("modifierUserId") Long modifierUserId,
-            @RequestBody Todo todo) {
+            @RequestBody Todo todo) throws IOException {
         todoService.addTodo(modifierUserId, todo);
         return new ResponseEntity<>("Successfully added Todo!", HttpStatus.CREATED);
     }
@@ -38,7 +39,7 @@ public class TodoController {
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String description,
             @RequestParam(required = false) LocalDateTime dueDate,
-            @RequestParam(required = false) Boolean completed) {
+            @RequestParam(required = false) Boolean completed) throws IOException {
         todoService.updateTodo(modifierUserId, todoId, title, description, dueDate, completed);
         return new ResponseEntity<>("Todo updated successfully!", HttpStatus.OK);
     }
@@ -46,7 +47,7 @@ public class TodoController {
     @DeleteMapping("/delete/{modifierUserId}")
     public ResponseEntity<String> deleteTodoById(
             @PathVariable("modifierUserId") Long modifierUserId,
-            @RequestParam Long todoId) {
+            @RequestParam Long todoId) throws IOException {
         todoService.deleteTodoById(modifierUserId, todoId);
         return new ResponseEntity<>("Todo got deleted successfully!", HttpStatus.OK);
     }

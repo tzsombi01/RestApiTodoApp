@@ -7,11 +7,12 @@ import com.tzsombi.repositories.TodoRepository;
 import com.tzsombi.repositories.UserRepository;
 import com.tzsombi.utils.CredentialChecker;
 import com.tzsombi.utils.ErrorConstants;
+import com.tzsombi.utils.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Clock;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -24,13 +25,16 @@ public class TodoService {
 
     private final UserRepository userRepository;
 
+    private final Logger logger;
+
     @Autowired
-    public TodoService(TodoRepository todoRepository, UserRepository userRepository) {
+    public TodoService(TodoRepository todoRepository, UserRepository userRepository, Logger logger) {
         this.todoRepository = todoRepository;
         this.userRepository = userRepository;
+        this.logger = logger;
     }
 
-    public void addTodo(Long modifierUserId, Todo todo) throws UserNotFoundException  {
+    public void addTodo(Long modifierUserId, Todo todo) throws UserNotFoundException, IOException {
         Long userIdToModify = todo.getUserId();
         if(!userRepository.existsById(userIdToModify)) {
             throw new UserNotFoundException(String.format(ErrorConstants.USER_NOT_FOUND_MESSAGE, userIdToModify));
@@ -45,6 +49,13 @@ public class TodoService {
         CredentialChecker.checkCredentialsOfModifierUser(modifierUserId, userIdToModify, userRepository);
 
         todoRepository.save(todo);
+
+        String logLine = String.join(",",
+                "add todo",
+                modifierUserId.toString(),
+                todo.getId().toString(),
+                LocalDateTime.now().toString());
+        logger.convertDataToCSvAndWriteToFile(logLine);
     }
 
     public List<Todo> getAllTodosOfUser(Long userId) {
@@ -53,7 +64,7 @@ public class TodoService {
 
     @Transactional
     public void updateTodo(Long modifierUserId, Long todoId, String title,
-                           String description, LocalDateTime dueDate, Boolean completed) {
+                           String description, LocalDateTime dueDate, Boolean completed) throws IOException {
         Todo todo = todoRepository.findById(todoId)
                 .orElseThrow(() -> new TodoNotFoundException(
                         String.format(ErrorConstants.TODO_NOT_FOUND_MESSAGE, todoId)));
@@ -82,9 +93,16 @@ public class TodoService {
         if(completed != null && !Objects.equals(todo.isCompleted(), completed)) {
             todo.setCompleted(completed);
         }
+
+        String logLine = String.join(",",
+                "update todo",
+                modifierUserId.toString(),
+                userIdToModify.toString(),
+                LocalDateTime.now().toString());
+        logger.convertDataToCSvAndWriteToFile(logLine);
     }
 
-    public void deleteTodoById(Long modifierUserId, Long todoId) throws TodoNotFoundException {
+    public void deleteTodoById(Long modifierUserId, Long todoId) throws TodoNotFoundException, IOException {
         Todo todo = todoRepository.findById(todoId)
                         .orElseThrow(() -> new TodoNotFoundException(
                                 String.format(ErrorConstants.TODO_NOT_FOUND_MESSAGE, todoId)));
@@ -97,5 +115,12 @@ public class TodoService {
         CredentialChecker.checkCredentialsOfModifierUser(modifierUserId, userIdToModify, userRepository);
 
         todoRepository.deleteById(todoId);
+
+        String logLine = String.join(",",
+                "delete todo",
+                modifierUserId.toString(),
+                todoId.toString(),
+                LocalDateTime.now().toString());
+        logger.convertDataToCSvAndWriteToFile(logLine);
     }
 }

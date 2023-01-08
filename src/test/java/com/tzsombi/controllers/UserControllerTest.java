@@ -3,42 +3,58 @@ package com.tzsombi.controllers;
 import com.tzsombi.exceptions.AuthException;
 import com.tzsombi.model.User;
 import com.tzsombi.repositories.UserRepository;
+import com.tzsombi.services.EmailSendingObserver;
+import com.tzsombi.services.UserService;
 import com.tzsombi.utils.ErrorConstants;
+import com.tzsombi.utils.Logger;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mindrot.jbcrypt.BCrypt;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
+@ExtendWith(MockitoExtension.class)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class UserControllerTest {
 
     private final MockMvc mockMvc;
 
-    @MockBean
     private final UserRepository userRepository;
 
+    private UserService userService;
+
+    @Mock private Logger logger;
+
+    @Mock private EmailSendingObserver emailSendingObserver;
+
     @Autowired
-    UserControllerTest(MockMvc mockMvc, UserRepository userRepository) {
+    UserControllerTest(MockMvc mockMvc, UserRepository userRepository, UserService userService) {
         this.mockMvc = mockMvc;
         this.userRepository = userRepository;
+        this.userService = userService;
+    }
+
+    @BeforeEach
+    void setUp() {
+        userService = new UserService(userRepository, logger, emailSendingObserver);
     }
 
     @AfterEach
@@ -48,12 +64,15 @@ class UserControllerTest {
 
     @Test
     void shouldRegister_ValidUser() throws Exception {
+        // when
+        // then
         mockMvc.perform(post("/api/users/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"Zsombor\", " +
                           "\"email\":\"someemail@gmail.com\", " +
                           "\"password\":\"password\", " +
-                          "\"admin\":true}"))
+                          "\"admin\":true" +
+                        "}"))
                 .andExpect(status().isCreated());
     }
 
@@ -67,36 +86,39 @@ class UserControllerTest {
         user.setPassword("password");
         user.setAdmin(true);
 
-        // when
-        given(userRepository.existsByEmail(email)).willReturn(true);
+        User existingUser = new User();
+        existingUser.setName("Zsombor");
+        existingUser.setEmail(email);
+        existingUser.setPassword("password");
+        existingUser.setAdmin(true);
 
+        // when
+        userRepository.save(existingUser);
         // then
         mockMvc.perform(post("/api/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Zsombor\", " +
                                 "\"email\":\"someemail@gmail.com\", " +
                                 "\"password\":\"password\", " +
-                                "\"admin\":true}"))
+                                "\"admin\":true" +
+                                "}"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof AuthException))
                 .andExpect(result -> assertThat(result.getResolvedException())
                         .hasMessageContaining(ErrorConstants.EMAIL_IS_ALREADY_IN_USE));
-        verify(userRepository, never()).save(user);
     }
 
     @Test
     void shouldDelete_UserById() throws Exception {
         // given
         User user = new User();
-        user.setId(1L);
         user.setName("Zsombor");
         user.setEmail("someemail@gmail.com");
         user.setAdmin(false);
         user.setPassword("password");
 
+        userRepository.save(user);
         // when
-        given(userRepository.findById(1L)).willReturn(Optional.of(user));
-
         // then
         mockMvc.perform(delete("/api/users/delete/{deleterUserId}?userIdToDelete=1", 1))
                 .andExpect(status().isOk());
@@ -116,14 +138,13 @@ class UserControllerTest {
         String modifyingEmail = "anotheremail@gmail.com";
         String modifyingName = "AnotherName";
         User user = new User();
-        user.setId(1L);
         user.setName("Zsombor");
         user.setEmail(email);
         user.setAdmin(false);
-        user.setPassword(BCrypt.hashpw(password, BCrypt.gensalt(10)));
+        user.setPassword(password);
 
         // when
-        given(userRepository.findById(1L)).willReturn(Optional.of(user));
+        User createdUser = userRepository.save(user);
 
         // then
         mockMvc.perform(put("/api/users/update/{modifierUserId}" +
@@ -139,18 +160,21 @@ class UserControllerTest {
         // given
         String originalEmail = "someemail@gmail.com";
         String inUseEmail = "anotheremail@gmail.com";
-        String modifyingName = "AnotherName";
-        String password = "password";
         User user = new User();
-        user.setId(1L);
         user.setName("Zsombor");
         user.setEmail(originalEmail);
         user.setAdmin(false);
-        user.setPassword(BCrypt.hashpw(password, BCrypt.gensalt(10)));
+        user.setPassword("password");
+
+        User existingUser = new User();
+        existingUser.setName("Zsombor");
+        existingUser.setEmail(inUseEmail);
+        existingUser.setAdmin(false);
+        existingUser.setPassword("password");
 
         // when
-        given(userRepository.findById(1L)).willReturn(Optional.of(user));
-        given(userRepository.existsByEmail(inUseEmail)).willReturn(true);
+        userRepository.save(existingUser);
+        userRepository.save(user);
 
         // then
         mockMvc.perform(put("/api/users/update/{modifierUserId}" +
@@ -159,28 +183,30 @@ class UserControllerTest {
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof AuthException))
                 .andExpect(result -> assertThat(result.getResolvedException())
                         .hasMessageContaining(ErrorConstants.EMAIL_IS_ALREADY_IN_USE));
-
-        assertThat(user.getName()).isEqualTo(modifyingName);
-        assertThat(user.getEmail()).isEqualTo(originalEmail);
     }
 
     @Test
     void shouldNotUpdate_User_EmailAlreadyInUse_And_NameIsNull() throws Exception {
         // given
         String originalEmail = "someemail@gmail.com";
-        String modifyingEmail = "anotheremail@gmail.com";
-        String password = "password";
+        String inUseEmail = "anotheremail@gmail.com";
         String originalName = "Zsombor";
+        String password = "password";
         User user = new User();
-        user.setId(1L);
-        user.setName(originalName);
+        user.setName("Zsombor");
         user.setEmail(originalEmail);
         user.setAdmin(false);
-        user.setPassword(BCrypt.hashpw(password, BCrypt.gensalt(10)));
+        user.setPassword(password);
+
+        User existingUser = new User();
+        existingUser.setName(originalName);
+        existingUser.setEmail(inUseEmail);
+        existingUser.setAdmin(false);
+        existingUser.setPassword(password);
 
         // when
-        given(userRepository.findById(1L)).willReturn(Optional.of(user));
-        given(userRepository.existsByEmail(modifyingEmail)).willReturn(true);
+        userRepository.save(existingUser);
+        userRepository.save(user);
 
         // then
         mockMvc.perform(put("/api/users/update/{modifierUserId}" +
@@ -202,14 +228,13 @@ class UserControllerTest {
         String password = "password";
         String originalName = "Zsombor";
         User user = new User();
-        user.setId(1L);
         user.setName(originalName);
         user.setEmail(originalEmail);
         user.setAdmin(false);
-        user.setPassword(BCrypt.hashpw(password, BCrypt.gensalt(10)));
+        user.setPassword(password);
 
         // when
-        given(userRepository.findById(1L)).willReturn(Optional.of(user));
+        userRepository.save(user);
 
         // then
         mockMvc.perform(put("/api/users/update/{modifierUserId}" +
@@ -226,14 +251,13 @@ class UserControllerTest {
         String email = "someemail@gmail.com";
         String password = "password";
         User user = new User();
-        user.setId(1L);
         user.setName("Zsombor");
         user.setEmail(email);
         user.setAdmin(false);
         user.setPassword(BCrypt.hashpw(password, BCrypt.gensalt(10)));
 
         // when
-        given(userRepository.findByEmail(email)).willReturn(Optional.of(user));
+        userRepository.save(user);
 
         //then
         mockMvc.perform(post("/api/users/login")
@@ -251,20 +275,19 @@ class UserControllerTest {
         String email = "someemail@gmail.com";
         String password = "password";
         User user = new User();
-        user.setId(1L);
         user.setName("Zsombor");
         user.setEmail(email);
         user.setAdmin(false);
         user.setPassword(BCrypt.hashpw(password, BCrypt.gensalt(10)));
 
         // when
-        given(userRepository.findByEmail(email)).willReturn(Optional.of(user));
+        userRepository.save(user);
 
         //then
         mockMvc.perform(post("/api/users/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{" +
-                                "\"email\":\"someemail123@gmail.com\"," +
+                                "\"email\":\"anotheremail@gmail.com\"," +
                                 "\"password\": \"password\"" +
                                 "}"))
                 .andExpect(status().isUnauthorized())
@@ -279,20 +302,19 @@ class UserControllerTest {
         String email = "someemail@gmail.com";
         String password = "password";
         User user = new User();
-        user.setId(1L);
         user.setName("Zsombor");
         user.setEmail(email);
         user.setAdmin(false);
         user.setPassword(BCrypt.hashpw(password, BCrypt.gensalt(10)));
 
         // when
-        given(userRepository.findByEmail(email)).willReturn(Optional.of(user));
+        userRepository.save(user);
 
         //then
         mockMvc.perform(post("/api/users/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{" +
-                                "\"email\":\"someemail2@gmail.com\"," +
+                                "\"email\":\"anotherEmail@gmail.com\"," +
                                 "\"password\": \"123\"" +
                                 "}"))
                 .andExpect(status().isUnauthorized())

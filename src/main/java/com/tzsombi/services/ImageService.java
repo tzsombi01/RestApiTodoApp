@@ -10,24 +10,29 @@ import com.tzsombi.repositories.UserRepository;
 import com.tzsombi.utils.CredentialChecker;
 import com.tzsombi.utils.ErrorConstants;
 import com.tzsombi.utils.ImageUtil;
+import com.tzsombi.utils.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.zip.DataFormatException;
 
 @Service
 public class ImageService {
 
-    ImageRepository imageDataRepository;
+    private final ImageRepository imageDataRepository;
 
-    UserRepository userRepository;
+    private final UserRepository userRepository;
+
+    private final Logger logger;
 
     @Autowired
-    public ImageService(ImageRepository imageDataRepository, UserRepository userRepository) {
+    public ImageService(ImageRepository imageDataRepository, UserRepository userRepository, Logger logger) {
         this.imageDataRepository = imageDataRepository;
         this.userRepository = userRepository;
+        this.logger = logger;
     }
 
     public String uploadImage(Long modifierUserId, Long userIdToModify, MultipartFile file)
@@ -47,6 +52,13 @@ public class ImageService {
         userToModify.setImage(image);
         userRepository.save(userToModify);
 
+        String logLine = String.join(",",
+                "add image",
+                modifierUserId.toString(),
+                userIdToModify.toString(),
+                LocalDateTime.now().toString());
+        logger.convertDataToCSvAndWriteToFile(logLine);
+
         return "Image uploaded successfully: " + file.getOriginalFilename();
     }
 
@@ -59,7 +71,7 @@ public class ImageService {
     }
 
     public void deleteImageById(Long modifierUserId, Long userIdToModify, Long imageId)
-            throws ImageDataNotFoundException, UserNotFoundException, ImageNotFoundUnderUser {
+            throws ImageDataNotFoundException, UserNotFoundException, ImageNotFoundUnderUser, IOException {
 
         Image image = imageDataRepository.findById(imageId)
                 .orElseThrow(() -> new ImageDataNotFoundException(
@@ -78,5 +90,12 @@ public class ImageService {
         userToModify.setImage(null);
         userRepository.save(userToModify);
         imageDataRepository.delete(image);
+
+        String logLine = String.join(",",
+                "delete image",
+                modifierUserId.toString(),
+                userIdToModify.toString(),
+                LocalDateTime.now().toString());
+        logger.convertDataToCSvAndWriteToFile(logLine);
     }
 }

@@ -30,7 +30,7 @@ public class UserController {
     @DeleteMapping("/delete/{deleterUserId}")
     public ResponseEntity<String> deleteUserById(
             @PathVariable("deleterUserId") Long deleterUserId,
-            @RequestParam(required = true)  Long userIdToDelete) {
+            @RequestParam(required = true)  Long userIdToDelete) throws IOException {
         userService.deleteUserById(deleterUserId, userIdToDelete);
         return new ResponseEntity<>("User got deleted successfully!", HttpStatus.OK);
     }
@@ -46,7 +46,7 @@ public class UserController {
             @PathVariable("modifierUserId") Long modifierUserId,
             @RequestParam(required = true)  Long userIdToModify,
             @RequestParam(required = false) String name,
-            @RequestParam(required = false) String email) {
+            @RequestParam(required = false) String email) throws IOException {
         userService.updateUser(modifierUserId, userIdToModify, name, email);
         return new ResponseEntity<>("User updated successfully!", HttpStatus.OK);
     }

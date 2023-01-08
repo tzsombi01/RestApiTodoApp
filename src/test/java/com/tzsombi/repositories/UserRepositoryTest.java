@@ -80,5 +80,4 @@ class UserRepositoryTest {
         // then
         assertThat(exists).isFalse();
     }
-
 }

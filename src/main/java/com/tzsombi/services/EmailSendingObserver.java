@@ -17,7 +17,6 @@ public class EmailSendingObserver {
     List<User> users = new ArrayList<>();
 
     private final EmailService emailService;
-
     private final Clock clock = Clock.systemDefaultZone();
     private final TodoRepository todoRepository;
 
