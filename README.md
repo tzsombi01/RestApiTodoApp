@@ -42,10 +42,13 @@ We should set the following variables:
 - DB_PASSWORD
 - EMAIL_ADDRESS
 - EMAIL_PASSWORD
+- IS TESTING
 
 Set your chosen names and passwords we've just created for postgres to the DB username and password.
 
 Set your email address and password for the email address and password. This will be the email, tha sends the notifications.
+
+Set IS_TESTING false.
 
 **Note**, that if you use **Two-factor authentication**, make sure, to give an app code as a password.
 
@@ -123,7 +126,7 @@ Provide image ID at the end.
 
 Let's try to log in with our user on endpoint login with **POST** request: `http://localhost:8080/api/users/login`
 
-And provide raw, json payload with content:
+And provide raw, _json_ payload with content:
 ```
 {
     "email": "johnie@gmail.com",
@@ -172,7 +175,23 @@ At the end of the URL we will have the user id who is deleting, and we can provi
 
 ---
 
+The tests are all up and running, but before you run all of them, specify an **environment variable** **IS_TESTING** as **true**.
+Because of mocking issues, I chose this solution to prevent the Logger to run.
+
+We have 2 type of test, 2 unit tests and 1 end-to-end integration test. I used jUnit 5 and Mockito for the tests ,
+as well as an in-memory H2 database.
+
+To make the user-side "fully" tested, I made some tests for the repositories as well.
+
+I chose to implement unit testing for the userService, as the main Object of our project. 
+I was mocking everything aside our focused userService (because we tested the repositories earlier), 
+but later decided that I will not mock the repository.
+
+Last, but not least we have the integration tests.
+
+---
+
 The email observer class by default checks every 30 minutes ( 0th and 30th minute of every hour ) whether it needs to send notifications.
-Adjust it to your liking (EmailSendingObserver class), so you won't have to wait ~20-30 minutes until execution. 
+Adjust it to your liking (EmailSendingObserver class), so you won't have to wait ~20-30 minutes until execution.
 
 ### Author: Zsombor Töreky
