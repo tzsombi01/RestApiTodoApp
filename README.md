@@ -42,7 +42,7 @@ We should set the following variables:
 - DB_PASSWORD
 - EMAIL_ADDRESS
 - EMAIL_PASSWORD
-- IS TESTING
+- IS_TESTING
 
 Set your chosen names and passwords we've just created for postgres to the DB username and password.
 
