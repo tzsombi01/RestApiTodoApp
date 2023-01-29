@@ -46,7 +46,7 @@ We should set the following variables:
 
 Set your chosen names and passwords we've just created for postgres to the DB username and password.
 
-Set your email address and password for the email address and password. This will be the email, tha sends the notifications.
+Set your email address and password for the email address and password. This will be the email, that sends the notifications.
 
 Set IS_TESTING false.
 
