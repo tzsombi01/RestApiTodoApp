@@ -20,7 +20,7 @@ Under a superuser like postgres create user with a name, like todomanager, and t
 
 `CREATE USER todomanager with password 'password'`
 
-**Note**, that If you want the username to be case-sensitive put it in double quotes, like: "userName"**
+**Note**, that If you want the username to be case-sensitive put it in double quotes, like: "userName"
 
 `CREATE DATABASE todoappdb WITH OWNER todomanager;`
 
