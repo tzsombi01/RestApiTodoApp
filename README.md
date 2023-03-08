@@ -18,7 +18,7 @@ in that case make sure to spin up a docker instance in which you can execute the
 
 Under a superuser like postgres create user with a name, like todomanager, and the database afterwards.
 
-`CREATE USER todomanager with password 'password'`
+`CREATE USER todomanager with password 'password';`
 
 **Note**, that If you want the username to be case-sensitive put it in double quotes, like: "userName"
 
